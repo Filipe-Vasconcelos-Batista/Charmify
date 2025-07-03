@@ -1,8 +1,11 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\User;
 
+use App\Entity\Property\SalonRoles;
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -44,16 +47,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $phone_number = null;
 
     #[ORM\Column]
+    private bool $is_system_email;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $accepted_terms_at = null;
+
+    #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $modified_at = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $accepted_terms_at = null;
-
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $deleted_at = null;
+
+    /**
+     * @var Collection<int, SalonRoles>
+     */
+    #[ORM\OneToMany(targetEntity: SalonRoles::class, mappedBy: 'UserId')]
+    private Collection $salonRoles;
+
+    public function __construct()
+    {
+        $this->salonRoles = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -223,4 +240,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, SalonRoles>
+     */
+    public function getSalonRoles(): Collection
+    {
+        return $this->salonRoles;
+    }
+
+    public function addSalonRole(SalonRoles $salonRole): static
+    {
+        if (!$this->salonRoles->contains($salonRole)) {
+            $this->salonRoles->add($salonRole);
+            $salonRole->setUserId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSalonRole(SalonRoles $salonRole): static
+    {
+        if ($this->salonRoles->removeElement($salonRole)) {
+            // set the owning side to null (unless already changed)
+            if ($salonRole->getUserId() === $this) {
+                $salonRole->setUserId(null);
+            }
+        }
+
+        return $this;
+    }
+
 }
