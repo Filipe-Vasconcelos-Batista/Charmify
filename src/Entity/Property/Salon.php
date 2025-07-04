@@ -2,6 +2,7 @@
 
 namespace App\Entity\Property;
 
+use App\Entity\Services\Services;
 use App\Repository\Property\SalonRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -36,9 +37,16 @@ class Salon
     #[ORM\OneToMany(targetEntity: SalonRoles::class, mappedBy: 'salonId')]
     private Collection $salonRoles;
 
+    /**
+     * @var Collection<int, Services>
+     */
+    #[ORM\OneToMany(targetEntity: Services::class, mappedBy: 'SalonId')]
+    private Collection $services;
+
     public function __construct()
     {
         $this->salonRoles = new ArrayCollection();
+        $this->services = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -130,6 +138,36 @@ class Salon
             // set the owning side to null (unless already changed)
             if ($salonRole->getSalonId() === $this) {
                 $salonRole->setSalonId(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Services>
+     */
+    public function getServices(): Collection
+    {
+        return $this->services;
+    }
+
+    public function addService(Services $service): static
+    {
+        if (!$this->services->contains($service)) {
+            $this->services->add($service);
+            $service->setSalonId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeService(Services $service): static
+    {
+        if ($this->services->removeElement($service)) {
+            // set the owning side to null (unless already changed)
+            if ($service->getSalonId() === $this) {
+                $service->setSalonId(null);
             }
         }
 

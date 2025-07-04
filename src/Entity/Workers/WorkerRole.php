@@ -3,8 +3,12 @@
 namespace App\Entity\Workers;
 
 use App\Entity\Property\SalonRoles;
+use App\Entity\Scheduling\Calendar;
+use App\Entity\Services\Details;
 use App\Enum\WeekDaysEnum;
 use App\Repository\Workers\WorkerRoleRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -43,6 +47,20 @@ class WorkerRole
 
     #[ORM\ManyToOne(inversedBy: 'workerRoleId')]
     private ?TimeOff $timeOff = null;
+
+    /**
+     * @var Collection<int, Calendar>
+     */
+    #[ORM\OneToMany(targetEntity: Calendar::class, mappedBy: 'workerRoleId')]
+    private Collection $calendars;
+
+    #[ORM\ManyToOne(inversedBy: 'workerRoleId')]
+    private ?Details $details = null;
+
+    public function __construct()
+    {
+        $this->calendars = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -156,6 +174,48 @@ class WorkerRole
     public function setTimeOff(?TimeOff $timeOff): static
     {
         $this->timeOff = $timeOff;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Calendar>
+     */
+    public function getCalendars(): Collection
+    {
+        return $this->calendars;
+    }
+
+    public function addCalendar(Calendar $calendar): static
+    {
+        if (!$this->calendars->contains($calendar)) {
+            $this->calendars->add($calendar);
+            $calendar->setWorkerRoleId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCalendar(Calendar $calendar): static
+    {
+        if ($this->calendars->removeElement($calendar)) {
+            // set the owning side to null (unless already changed)
+            if ($calendar->getWorkerRoleId() === $this) {
+                $calendar->setWorkerRoleId(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getDetails(): ?Details
+    {
+        return $this->details;
+    }
+
+    public function setDetails(?Details $details): static
+    {
+        $this->details = $details;
 
         return $this;
     }
