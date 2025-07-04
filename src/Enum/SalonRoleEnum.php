@@ -1,15 +1,15 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: Milan Rasljic
+ * User: Filipe Batista
  * Date: 03/07/25 16:50
  */
 
 namespace App\Enum;
 
-enum SalonRoleEnum
+enum SalonRoleEnum :string
 {
-    const ROLE_OWNER  = 'Owner';
-    const ROLE_ADMIN  = 'Admin';
-    const ROLE_WORKER = 'Worker';
+    case ROLE_OWNER  = 'Owner';
+    case ROLE_ADMIN  = 'Admin';
+    case ROLE_WORKER = 'Worker';
 }

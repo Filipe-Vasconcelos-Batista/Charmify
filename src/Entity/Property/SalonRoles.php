@@ -3,6 +3,7 @@
 namespace App\Entity\Property;
 
 use App\Entity\User\User;
+use App\Entity\Workers\WorkerRole;
 use App\Repository\Property\SalonRolesRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -33,6 +34,9 @@ class SalonRoles
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $alteredAt = null;
+
+    #[ORM\OneToOne(mappedBy: 'salonRolesId', cascade: ['persist', 'remove'])]
+    private ?WorkerRole $workerRole = null;
 
     public function getId(): ?int
     {
@@ -107,6 +111,23 @@ class SalonRoles
     public function setAlteredAt(?\DateTimeImmutable $alteredAt): static
     {
         $this->alteredAt = $alteredAt;
+
+        return $this;
+    }
+
+    public function getWorkerRole(): ?WorkerRole
+    {
+        return $this->workerRole;
+    }
+
+    public function setWorkerRole(WorkerRole $workerRole): static
+    {
+        // set the owning side of the relation if necessary
+        if ($workerRole->getSalonRolesId() !== $this) {
+            $workerRole->setSalonRolesId($this);
+        }
+
+        $this->workerRole = $workerRole;
 
         return $this;
     }
