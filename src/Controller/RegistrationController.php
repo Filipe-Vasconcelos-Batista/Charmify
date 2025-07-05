@@ -6,6 +6,7 @@ use App\Entity\User\User;
 use App\Form\RegistrationFormType;
 use App\Security\EmailVerifier;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -16,15 +17,16 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 class RegistrationController extends AbstractController
 {
+
     public function __construct(private EmailVerifier $emailVerifier)
     {
+
     }
 
-    #[Route('api/register', name: 'app_register')]
+    #[Route('api/register', name: 'app_register',methods:['POST'])]
     public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager): Response
     {
         $user = new User();
@@ -52,12 +54,23 @@ class RegistrationController extends AbstractController
 
             // do anything else you need here, like send an email
 
-            return $security->login($user, 'form_login', 'main');
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'User registered successfully',
+                'user' => [
+                    'email' => $user->getEmail(),
+                    'id' => $user->getId(),
+                ],
+            ], Response::HTTP_CREATED);
+
         }
 
-        return $this->render('registration/register.html.twig', [
-            'registrationForm' => $form,
-        ]);
+
+        return new JsonResponse([
+            'success' => false,
+            'errors' => $form->getErrors(true, true),
+        ], Response::HTTP_BAD_REQUEST);
+
     }
 
     #[Route('api/verify/email', name: 'app_verify_email')]
@@ -70,10 +83,10 @@ class RegistrationController extends AbstractController
             /** @var User $user */
             $user = $this->getUser();
             $this->emailVerifier->handleEmailConfirmation($request, $user);
-        } catch (VerifyEmailExceptionInterface $exception) {
+        } catch (Exception $exception) {
             return new JsonResponse([
                 'success' => true,
-                'message' => 'verify_email_error', $translator->trans($exception->getReason(), [], 'VerifyEmailBundle')
+                'message' => 'verify_email_error', $translator->trans($exception->getMessage(), [], 'VerifyEmailBundle')
             ]);
         }
 
