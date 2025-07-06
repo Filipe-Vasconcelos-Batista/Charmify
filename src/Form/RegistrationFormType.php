@@ -30,7 +30,6 @@ class RegistrationFormType extends AbstractType
                 ],
             ])
             ->add(UserEnum::FirstName->value, textType::class, [
-                'mapped' => false,
                 'constraints' => [
                     new NotBlank([
                         'message' => 'Please enter your first name',
@@ -38,7 +37,6 @@ class RegistrationFormType extends AbstractType
                 ],
             ])
             ->add(UserEnum::LastName->value, textType::class, [
-                'mapped' => false,
                 'constraints' => [
                     new NotBlank([
                         'message' => 'Please enter your last name',
@@ -46,7 +44,6 @@ class RegistrationFormType extends AbstractType
                 ],
             ])
             ->add(UserEnum::Phone->value, telType::class, [
-                'mapped' => false,
                 'constraints' => [
                     new NotBlank([
                         'message' => 'Please enter your phone number',
@@ -76,6 +73,7 @@ class RegistrationFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => User::class,
+            'csrf_protection' => false,
         ]);
     }
 }

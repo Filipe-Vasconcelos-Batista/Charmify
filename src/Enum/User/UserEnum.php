@@ -15,6 +15,6 @@ enum UserEnum :string
     case FirstName = 'firstName';
     case LastName = 'lastName';
     case PlainPassword = 'plainPassword';
-    case Phone = 'phone';
+    case Phone = 'phoneNumber';
 
 }

@@ -9,11 +9,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -27,54 +25,55 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('api/register', name: 'app_register',methods:['POST'])]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager): Response
+    public function register(Request $request,
+                             UserPasswordHasherInterface $userPasswordHasher,
+                             EntityManagerInterface $entityManager): JsonResponse
     {
+        $data= json_decode($request->getContent(),true);
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
-        $form->handleRequest($request);
+        $form->submit($data);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            /** @var string $plainPassword */
-            $plainPassword = $form->get('plainPassword')->getData();
-
-            // encode the plain password
-            $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
-
-            $entityManager->persist($user);
-            $entityManager->flush();
-
-            // generate a signed url and email it to the user
-            $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
-                (new TemplatedEmail())
-                    ->from(new Address('mailer@mydomains.com', 'MailBot'))
-                    ->to((string) $user->getEmail())
-                    ->subject('Please Confirm your Email')
-                    ->htmlTemplate('registration/confirmation_email.html.twig')
-            );
-
-            // do anything else you need here, like send an email
-
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            $errors = [];
+            foreach ($form->getErrors(true, true) as $error) {
+                $errors[] = $error->getMessage();
+            }
             return new JsonResponse([
-                'success' => true,
-                'message' => 'User registered successfully',
-                'user' => [
-                    'email' => $user->getEmail(),
-                    'id' => $user->getId(),
-                ],
-            ], Response::HTTP_CREATED);
-
+                'success' => false,
+                'errors' => $errors,
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
+        $plainPassword=$form->get('plainPassword')->getData();
+        $user->setPassword(
+            $userPasswordHasher->hashPassword($user,$plainPassword));
+        $user->setIsSystemEmail(false);
+        $user->setAcceptedTermsAt(new \DateTimeImmutable());
+        $entityManager->persist($user);
+        $entityManager->flush();
 
+        $this->emailVerifier->sendEmailConfirmation(
+            'app_verify_email',
+            $user,
+            (new TemplatedEmail())
+                ->to($user->getEmail())
+                ->from( 'mailer@mydomains.com')
+                ->subject('Confirmation de votre email')
+                ->htmlTemplate('registration/confirmation_email.html.twig')
+            );
         return new JsonResponse([
-            'success' => false,
-            'errors' => $form->getErrors(true, true),
-        ], Response::HTTP_BAD_REQUEST);
-
+            'success' => true,
+            'message' => 'User registered successfully',
+            'user' => [
+                'email' => $user->getEmail(),
+                'id' => $user->getId(),
+                ],
+            ], Response::HTTP_CREATED);
     }
 
     #[Route('api/verify/email', name: 'app_verify_email')]
-    public function verifyUserEmail(Request $request, TranslatorInterface $translator): jsonResponse
+    public function verifyUserEmail(Request $request, TranslatorInterface $translator, EntityManagerInterface $entityManager): jsonResponse
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -82,7 +81,7 @@ class RegistrationController extends AbstractController
         try {
             /** @var User $user */
             $user = $this->getUser();
-            $this->emailVerifier->handleEmailConfirmation($request, $user);
+            $this->emailVerifier->handleEmailConfirmation($request, $entityManager);
         } catch (Exception $exception) {
             return new JsonResponse([
                 'success' => true,

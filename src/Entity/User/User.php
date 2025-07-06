@@ -37,31 +37,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $first_name = null;
+    private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $last_name = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $role = null;
+    private ?string $lastName = null;
 
     #[ORM\Column(length: 20)]
-    private ?string $phone_number = null;
+    private ?string $phoneNumber = null;
 
     #[ORM\Column]
-    private bool $is_system_email;
+    private bool $isSystemEmail;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $accepted_terms_at = null;
+    private ?\DateTimeImmutable $acceptedTermsAt = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $created_at = null;
-
-    #[ORM\Column]
-    private ?\DateTimeImmutable $modified_at = null;
+    private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $deleted_at = null;
+    private ?\DateTimeImmutable $modifiedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $deletedAt = null;
 
     /**
      * @var Collection<int, SalonRoles>
@@ -75,6 +72,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __construct()
     {
         $this->salonRoles = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -152,96 +150,84 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getFirstName(): ?string
     {
-        return $this->first_name;
+        return $this->firstName;
     }
 
-    public function setFirstName(string $first_name): static
+    public function setFirstName(string $firstName): static
     {
-        $this->first_name = $first_name;
+        $this->firstName = $firstName;
 
         return $this;
     }
 
     public function getLastName(): ?string
     {
-        return $this->last_name;
+        return $this->lastName;
     }
 
-    public function setLastName(string $last_name): static
+    public function setLastName(string $lastName): static
     {
-        $this->last_name = $last_name;
-
-        return $this;
-    }
-
-    public function getRole(): ?string
-    {
-        return $this->role;
-    }
-
-    public function setRole(string $role): static
-    {
-        $this->role = $role;
+        $this->lastName = $lastName;
 
         return $this;
     }
 
     public function getPhoneNumber(): ?string
     {
-        return $this->phone_number;
+        return $this->phoneNumber;
     }
 
-    public function setPhoneNumber(string $phone_number): static
+    public function setPhoneNumber(string $phoneNumber): static
     {
-        $this->phone_number = $phone_number;
+        $this->phoneNumber = $phoneNumber;
 
         return $this;
     }
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $created_at): static
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
-        $this->created_at = $created_at;
+        $this->createdAt = $createdAt;
 
         return $this;
     }
 
     public function getModifiedAt(): ?\DateTimeImmutable
     {
-        return $this->modified_at;
+        return $this->modifiedAt;
     }
 
-    public function setModifiedAt(\DateTimeImmutable $modified_at): static
+    public function setModifiedAt(\DateTimeImmutable $modifiedAt): static
     {
-        $this->modified_at = $modified_at;
+        $this->modifiedAt = $modifiedAt;
 
         return $this;
     }
 
     public function getAcceptedTermsAt(): ?\DateTimeImmutable
     {
-        return $this->accepted_terms_at;
+        return $this->acceptedTermsAt;
     }
 
-    public function setAcceptedTermsAt(\DateTimeImmutable $accepted_terms_at): static
+    public function setAcceptedTermsAt(\DateTimeImmutable $acceptedTermsAt): static
     {
-        $this->accepted_terms_at = $accepted_terms_at;
+        $this->acceptedTermsAt = $acceptedTermsAt;
 
         return $this;
     }
 
     public function getDeletedAt(): ?\DateTimeImmutable
     {
-        return $this->deleted_at;
+        return $this->deletedAt;
     }
 
-    public function setDeletedAt(?\DateTimeImmutable $deleted_at): static
+    public function setDeletedAt(?\DateTimeImmutable $deletedAt): static
     {
-        $this->deleted_at = $deleted_at;
+        $this->deletedAt = $deletedAt;
 
         return $this;
     }
@@ -286,6 +272,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isVerified = $isVerified;
 
         return $this;
+    }
+
+    public function isSystemEmail(): bool
+    {
+        return $this->isSystemEmail;
+    }
+
+    public function setIsSystemEmail(bool $isSystemEmail): void
+    {
+        $this->isSystemEmail = $isSystemEmail;
     }
 
 }
