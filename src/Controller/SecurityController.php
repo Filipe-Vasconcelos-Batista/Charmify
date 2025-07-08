@@ -2,45 +2,73 @@
 
 namespace App\Controller;
 
+use App\Repository\UserRepository;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
 {
+
+    /**
+     * @throws \Exception
+     * This actually does nothing this is automatically handled by lexik
+     */
+
     #[Route(path: 'api/login', name: 'app_login',methods:['POST'])]
-    public function login(AuthenticationUtils $authenticationUtils):JsonResponse
+    public function login(
+        Request $request,
+        UserRepository $userRepository,
+        UserPasswordHasherInterface $hasher,
+        JWTTokenManagerInterface $jwtManager
+    ):JsonResponse
     {
-        // get the login error if there is one
-        $error = $authenticationUtils->getLastAuthenticationError();
+        $data = json_decode($request->getContent(),true);
+        $email= $data['email'] ?? '';
+        $password= $data['password'] ?? '';
 
-        // last username entered by the user
-        $lastUsername = $authenticationUtils->getLastUsername();
+        $user=$userRepository->findOneBy(['email'=>$email]);
+        if(!$user || !$hasher->isPasswordValid($user,$password)){
+            return new JsonResponse(['error'=> 'Invalid credentials'], 401);
+        }
+        if(! $hasher->isPasswordValid($user,$password)){
+            return new JsonResponse(['error'=> 'Invalid credentials'], 401);
+        }
+        $token = $jwtManager->create($user);
 
-        if ($error) {
+        return new JsonResponse([
+            'token' => $token,
+            'user'=> [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+            ]]);
+
+    }
+
+    #[Route(path: '/api/user', name: 'app_user_info', methods: ['GET'])]
+    public function getUserInfo(): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user) {
             return new JsonResponse([
                 'success' => false,
-                'message' => $error->getMessageKey(),
-                'last_username' => $lastUsername
+                'message' => 'User not authenticated'
             ], Response::HTTP_UNAUTHORIZED);
         }
-        if ($this->getUser()) {
-            return new JsonResponse([
-                'success' => true,
-                'message' => 'Login successful',
-                'user' => [
-                    'id' => $this->getUser()->getId(),
-                    'email' => $this->getUser()->getEmail(),
-                ]
-            ]);
-        }
-            return new JsonResponse([
-                'success' => false,
-                'message' => 'Please provide credentials',
-                'last_username' => $lastUsername
-            ]);
+
+        return new JsonResponse([
+            'success' => true,
+            'user' => [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+            ]
+        ]);
     }
 
     #[Route(path: 'api/logout', name: 'app_logout',methods:['POST'])]

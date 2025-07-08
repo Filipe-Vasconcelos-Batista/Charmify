@@ -7,9 +7,19 @@ services:
     depends_on:
       - charm-db
     volumes:
+      - ./assets:/var/www/html/assets
+      - ./config:/var/www/html/config
+      - ./bin:/var/www/html/bin
+      - ./migrations:/var/www/html/migrations
+      - ./public:/var/www/html/public
       - ./src:/var/www/html/src
       - ./templates:/var/www/html/templates
-      - ./public:/var/www/html/public
+      - ./tests:/var/www/html/tests
+      - ./translations:/var/www/html/translations
+      - ./var:/var/www/html/var
+      - ./vendor:/var/www/html/vendor
+      - ./composer.json:/var/www/html/composer.json
+      - ./composer.lock:/var/www/html/composer.lock
     env_file:
       - .env.local
   redis:
